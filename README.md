@@ -69,7 +69,7 @@ E:\Autopilot\
 ```
 
 **Parameter:**
-- **GroupTag:** Der Group Tag für Autopilot (z.B. `"HBL-Intern"`, `"NLA-TEST"`)
+- **GroupTag:** Der Group Tag für Autopilot (z.B. `"Test-Intern"`, `"NLA-TEST"`)
 - **OutputFolder:** `"."` = CSV wird auf USB-Stick gespeichert
 - **Assign:** `true` = Wartet auf Autopilot-Profilzuweisung
 - **Reboot:** `false` = Kein automatischer Neustart (empfohlen für manuelle Kontrolle)
@@ -243,3 +243,4 @@ Bei Problemen:
 
 **Erstellt:** 2026-01-11  
 **Version:** 1.0
+
