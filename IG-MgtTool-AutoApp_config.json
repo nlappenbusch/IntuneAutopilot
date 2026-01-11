@@ -1,0 +1,182 @@
+﻿{
+    "adminConsent":  {
+                         "granted":  false,
+                         "url":  "https://login.microsoftonline.com/YOUR-TENANT-ID/adminconsent?client_id=YOUR-APP-ID",
+                         "note":  "Admin consent must be granted by a Global Administrator",
+                         "required":  true
+                     },
+    "services":  {
+                     "microsoftGraph":  {
+                                            "sampleCommand":  "Connect-MgGraph -ClientId YOUR-APP-ID -TenantId YOUR-TENANT-ID -CertificateThumbprint YOUR-CERT-THUMBPRINT",
+                                            "parameters":  {
+                                                               "TenantId":  "YOUR-TENANT-ID",
+                                                               "CertificateThumbprint":  "YOUR-CERT-THUMBPRINT",
+                                                               "ClientId":  "YOUR-APP-ID"
+                                                           },
+                                            "connectionMethod":  "Certificate",
+                                            "enabled":  true
+                                        },
+                     "exchangeOnline":  {
+                                            "sampleCommand":  "Connect-ExchangeOnline -AppId YOUR-APP-ID -CertificateThumbprint YOUR-CERT-THUMBPRINT -Organization YOUR-DOMAIN.COM",
+                                            "parameters":  {
+                                                               "AppId":  "YOUR-APP-ID",
+                                                               "CertificateThumbprint":  "YOUR-CERT-THUMBPRINT",
+                                                               "Organization":  "YOUR-DOMAIN.COM"
+                                                           },
+                                            "connectionMethod":  "Certificate",
+                                            "enabled":  true
+                                        }
+                 },
+    "authentication":  {
+                           "methods":  [
+                                           {
+                                               "thumbprint":  "YOUR-CERT-THUMBPRINT",
+                                               "primary":  true,
+                                               "type":  "Certificate"
+                                           },
+                                           {
+                                               "primary":  false,
+                                               "type":  "ClientSecret",
+                                               "secretValue":  "YOUR-CLIENT-SECRET"
+                                           }
+                                       ]
+                       },
+    "permissions":  {
+                        "microsoftGraph":  {
+                                               "application":  [
+                                                                   {
+                                                                       "name":  "AuditLog.Read.All",
+                                                                       "description":  "Read audit logs"
+                                                                   },
+                                                                   {
+                                                                       "name":  "DeviceManagementConfiguration.ReadWrite.All",
+                                                                       "description":  "Read and write device configuration"
+                                                                   },
+                                                                   {
+                                                                       "name":  "DeviceManagementManagedDevices.PrivilegedOperations.All",
+                                                                       "description":  "Perform privileged operations on devices"
+                                                                   },
+                                                                   {
+                                                                       "name":  "DeviceManagementManagedDevices.ReadWrite.All",
+                                                                       "description":  "Read and write managed devices"
+                                                                   },
+                                                                   {
+                                                                       "name":  "DeviceManagementServiceConfig.Read.All",
+                                                                       "description":  "Read device management service config"
+                                                                   },
+                                                                   {
+                                                                       "name":  "DeviceManagementServiceConfig.ReadWrite.All",
+                                                                       "description":  "Read and write device management service config"
+                                                                   },
+                                                                   {
+                                                                       "name":  "Directory.ReadWrite.All",
+                                                                       "description":  "Read and write directory data"
+                                                                   },
+                                                                   {
+                                                                       "name":  "Group.ReadWrite.All",
+                                                                       "description":  "Read and write all groups"
+                                                                   },
+                                                                   {
+                                                                       "name":  "LicenseAssignment.ReadWrite.All",
+                                                                       "description":  "Read and write license assignments"
+                                                                   },
+                                                                   {
+                                                                       "name":  "User.ManageIdentities.All",
+                                                                       "description":  "Manage user identities"
+                                                                   }
+                                                               ],
+                                               "delegated":  [
+                                                                 {
+                                                                     "name":  "User.Read",
+                                                                     "description":  "Sign in and read user profile"
+                                                                 }
+                                                             ]
+                                           },
+                        "exchange":  {
+                                         "application":  [
+                                                             {
+                                                                 "name":  "Contacts.ReadWrite",
+                                                                 "description":  "Read and write contacts"
+                                                             },
+                                                             {
+                                                                 "name":  "Exchange.ManageAsApp",
+                                                                 "description":  "Manage Exchange as application"
+                                                             },
+                                                             {
+                                                                 "name":  "Exchange.ManageAsAppV2",
+                                                                 "description":  "Manage Exchange as application V2"
+                                                             },
+                                                             {
+                                                                 "name":  "full_access_as_app",
+                                                                 "description":  "Full access as application"
+                                                             },
+                                                             {
+                                                                 "name":  "Mailbox.Migration",
+                                                                 "description":  "Mailbox migration"
+                                                             },
+                                                             {
+                                                                 "name":  "MailboxSettings.ReadWrite",
+                                                                 "description":  "Read and write mailbox settings"
+                                                             },
+                                                             {
+                                                                 "name":  "Organization.ReadWrite.All",
+                                                                 "description":  "Read and write organization"
+                                                             },
+                                                             {
+                                                                 "name":  "User.ReadBasic.All",
+                                                                 "description":  "Read basic user information"
+                                                             }
+                                                         ]
+                                     },
+                        "roles":  {
+                                      "directory":  [
+                                                        {
+                                                            "assigned":  true,
+                                                            "name":  "Exchange Administrator",
+                                                            "id":  "29232cdf-9323-42fd-ade2-1d097af3e4de"
+                                                        }
+                                                    ]
+                                  }
+                    },
+    "credentials":  {
+                        "clientSecret":  {
+                                             "displayName":  "IG-MgtTool-AutoApp-secret",
+                                             "expiresAt":  "2028-01-10T21:26:01.017Z",
+                                             "value":  "YOUR-CLIENT-SECRET"
+                                         },
+                        "certificate":  {
+                                            "subject":  "CN=IG-MgtTool-AutoApp",
+                                            "thumbprint":  "YOUR-CERT-THUMBPRINT",
+                                            "storeLocation":  "CurrentUser\\\\My",
+                                            "files":  {
+                                                          "privateKey":  {
+                                                                             "path":  "C:\\Temp\\IG-MgtTool-AutoApp_private.pfx",
+                                                                             "format":  "PFX",
+                                                                             "password":  "YOUR-PFX-PASSWORD"
+                                                                         },
+                                                          "publicKey":  {
+                                                                            "path":  "C:\\Temp\\IG-MgtTool-AutoApp_public.cer",
+                                                                            "format":  "CER"
+                                                                        }
+                                                      },
+                                            "expiresAt":  "2028-01-10T21:25:53.000Z"
+                                        }
+                    },
+    "config":  {
+                   "description":  "Entra ID App Configuration for IG-MgtTool-AutoApp",
+                   "version":  "1.0",
+                   "createdAt":  "2026-01-10T21:26:01.015Z"
+               },
+    "tenant":  {
+                   "domain":  "YOUR-DOMAIN.COM",
+                   "id":  "YOUR-TENANT-ID",
+                   "organization":  "YOUR-DOMAIN.COM"
+               },
+    "application":  {
+                        "objectId":  "YOUR-APP-OBJECT-ID",
+                        "applicationId":  "YOUR-APP-ID",
+                        "name":  "IG-MgtTool-AutoApp",
+                        "clientId":  "YOUR-APP-ID",
+                        "servicePrincipalId":  "YOUR-SERVICE-PRINCIPAL-ID"
+                    }
+}

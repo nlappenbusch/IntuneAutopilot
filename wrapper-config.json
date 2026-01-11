@@ -1,0 +1,8 @@
+{
+  "GroupTag": "NLA-TEST",
+  "OutputFolder": ".",
+  "AppConfigPath": "IG-MgtTool-AutoApp_config.json",
+  "AutopilotScriptPath": "Get-WindowsAutopilotInfoCommunity.ps1",
+  "Assign": true,
+  "Reboot": false
+}
