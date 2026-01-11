@@ -1,29 +1,42 @@
 @echo off
-setlocal
+setlocal EnableExtensions
 
-:: Log-Datei im gleichen Verzeichnis wie die Batch
-set "LOGFILE=%~dp0autopilot-log.txt"
+set "SCRIPT=%~dp0Run-AutopilotWithExternalAppConfig.ps1"
+set "LOGDIR=%~dp0logs"
+set "LOGFILE=%LOGDIR%\autopilot-log.txt"
 
-echo ============================================== >> "%LOGFILE%"
-echo [%DATE% %TIME%] Autopilot-Import gestartet... >> "%LOGFILE%"
-echo ============================================== >> "%LOGFILE%"
+if not exist "%LOGDIR%" mkdir "%LOGDIR%" >nul 2>&1
 
+echo ==============================================
 echo Starte Autopilot-Import...
-echo Log wird geschrieben nach: %LOGFILE%
+echo Log: %LOGFILE%
+echo ==============================================
 
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0Run-AutopilotWithExternalAppConfig.ps1" 2>&1 | tee -Append "%LOGFILE%"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -Command ^
+  "$log='%LOGFILE%';" ^
+  "Add-Content $log '==============================================';" ^
+  "Add-Content $log ('['+(Get-Date)+'] Autopilot-Import gestartet');" ^
+  "try {" ^
+  "  & '%SCRIPT%' 2>&1 | Tee-Object -FilePath $log -Append;" ^
+  "  exit $LASTEXITCODE" ^
+  "} catch {" ^
+  "  $_ | Out-String | Tee-Object -FilePath $log -Append;" ^
+  "  exit 1" ^
+  "}"
 
-if %ERRORLEVEL% NEQ 0 (
-    echo [%DATE% %TIME%] FEHLER: Script mit ErrorLevel %ERRORLEVEL% beendet >> "%LOGFILE%"
-    echo FEHLER beim Autopilot-Import! Siehe Log: %LOGFILE%
-    pause
-    exit /b %ERRORLEVEL%
+set "PSEXIT=%ERRORLEVEL%"
+
+if not "%PSEXIT%"=="0" (
+  echo.
+  echo FEHLER: Script mit ExitCode %PSEXIT% beendet
+  echo Siehe Log: %LOGFILE%
+  pause
+  exit /b %PSEXIT%
 )
 
-echo [%DATE% %TIME%] Skript erfolgreich abgeschlossen. >> "%LOGFILE%"
-echo ============================================== >> "%LOGFILE%"
 echo.
-echo Autopilot-Import abgeschlossen!
+echo Autopilot-Import erfolgreich abgeschlossen
 echo Log: %LOGFILE%
 echo.
 pause
+exit /b 0
