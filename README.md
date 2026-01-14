@@ -1,186 +1,182 @@
-# HowTo: Windows Installationsmedium fuer Client Staging mit Autopilot / Intune (inkl. HWID Import)
+# HowTo: Windows-Installationsmedium fuer Client-Staging mit Autopilot / Intune vorbereiten
 
-Dieses Dokument beschreibt einen praxisnahen End-to-End Ablauf, um bestehende Geraete effizient zu stagen:
-- Windows Installation mit moeglichst wenig Klicks (autounattend.xml)
-- WLAN direkt im Setup/OOBE (Treiber + WLAN Profil)
-- Autopilot HWID Import inkl. GroupTag ohne User Login (USB Workflow)
+## Ziel
+Ziel ist es, bestehende Geraete moeglichst effizient in Windows Autopilot / Intune zu ueberfuehren –
+ohne Benutzeranmeldung, ohne Passwort- oder MFA-Eingaben und ohne nervige Klickerei waehrend der Installation.
 
-Repo/Grundlage fuer den Autopilot Import:
+Das Staging soll:
+- vollautomatisiert ablaufen
+- WLAN direkt zur Verfuegung stellen (Autopilot benoetigt Internet)
+- GroupTags setzen
+- ohne manuelle Benutzerinteraktion funktionieren
+- fuer viele Geraete parallel geeignet sein
+
+Die Grundlage fuer den Autopilot-Teil ist hier beschrieben:
 https://github.com/nlappenbusch/IntuneAutopilot
 
----
-
-## 1) Zielbild
-
-Du willst:
-- mehrere Geraete parallel installieren/stagen
-- kein WLAN Passwort x-mal eintippen
-- keine Usernamen/Passwoerter/MFA im Prozess
-- GroupTag direkt setzen, damit das richtige Autopilot Profil greift
-- moeglichst wenig Setup Klickerei (Partitionierung, Sprache, OOBE)
+Dieses Dokument ergaenzt das Ganze um:
+- WLAN-Treiber und WLAN-Profil im Installationsmedium
+- Datentraeger-Setup ohne Klickerei
+- Einsatz einer autounattend.xml
+- integrierten Autopilot Hardware-Hash Import
 
 ---
 
-## 2) Bausteine
+## Grundproblem bei Autopilot-Staging
 
-1. Autounattend.xml (Setup automatisieren)
-2. WLAN Treiber Injection (install.wim und optional boot.wim)
-3. WLAN Profil Injection (autounattend.xml, XML aus Referenzgeraet)
-4. Autopilot HWID Import via USB Stick (App-only Auth, GroupTag, optional Assign/Wait)
+Autopilot setzt voraus:
+- funktionierende Internetverbindung waehrend OOBE
+- moeglichst kein lokales Benutzerkonto
+- saubere Namensvergabe durch Intune
+- keine manuelle Eingabe von WLAN-Passwoertern an vielen Geraeten
+
+Ohne Vorbereitung fuehrt das in der Praxis zu:
+- manueller WLAN-Konfiguration pro Geraet
+- Setup-Abbruechen
+- inkonsistenten Installationen
+- Zeitverlust beim gleichzeitigen Staging vieler Clients
 
 ---
 
-## 3) Autounattend.xml erstellen (Schneegans Tool)
+## Loesung: Autounattend.xml + WLAN-Treiber + WLAN-Profil + HWID Import
 
-Empfohlenes Tool:
+### Bausteine
+1. Angepasstes Windows-Installationsmedium
+   - WLAN-Treiber bereits integriert
+   - .NET Framework 3.5 bereits integriert
+2. Autounattend.xml
+   - automatisiert Setup-Schritte
+   - konfiguriert WLAN
+   - vermeidet manuelle Klicks
+3. Autopilot-Import per Script
+   - GroupTag
+   - Tenant-Zuordnung
+   - ohne User-Login
+
+---
+
+## Autounattend.xml erstellen (Schneegans Tool)
+
+Zur Erstellung der autounattend.xml wird folgendes Tool empfohlen:
 https://schneegans.de/windows/unattend-generator/
 
-### 3.1 Wichtige Settings (muss so gesetzt sein)
+---
 
-#### Region and language
-- Windows display language: English (muss zur ISO passen)
-- Languages / keyboards (Reihenfolge):
-  1) German (Switzerland) / Swiss German
-  2) German (Germany) / German
-  3) Spanish (Spain) / Spanish
-- Home location: Switzerland
+## Wichtige Einstellungen im Schneegans-Tool
 
-#### Computer name
-- Let Windows generate a random computer name
+### Sprache und Region
 
-Wichtig: Damit Intune spaeter die Namensvergabe gemaess Naming Policy uebernehmen kann.
+Windows-Installationssprache:
+- English (muss zur ISO passen)
 
-#### Partitioning and formatting
-Empfohlen:
-- Let Windows Setup wipe, partition and format disk 0
-- Layout: GPT
-- ESP size: 300 MB
+Sprachen und Tastaturen (Reihenfolge relevant):
+1. German (Switzerland) – Swiss German
+2. German (Germany) – German
+3. Spanish (Spain) – Spanish
 
-Damit entfaellt interaktives Loeschen/Anlegen von Partitionen.
-
-#### User accounts (GANZ WICHTIG fuer Autopilot Experience)
-Unbedingt:
-- Add a Microsoft (online) user account interactively during Windows Setup
-
-Hinweis:
-- Lokale Offline Accounts nur dann nutzen, wenn du genau weisst, warum.
-- Fuer Autopilot/OOBE ist ein "normaler" Online Sign-In der Standardpfad. Autounattend soll hier nicht in einen Offline-Flow abbiegen.
+Home location:
+- Switzerland
 
 ---
 
-## 4) WLAN Profil ohne Passwort-Klickerei
+### Computername
 
-### 4.1 WLAN Profil von Referenzgeraet exportieren
+Unbedingt setzen auf:
+Let Windows generate a random computer name
 
-Auf einem Referenzgeraet, das bereits mit dem Staging-WLAN verbunden ist:
+Nur so kann Intune spaeter die Namensvergabe gemaess Naming Policy uebernehmen.
 
-```powershell
+---
+
+### Partitionierung und Datentraeger
+
+Empfohlene Einstellung:
+Let Windows Setup wipe, partition and format your hard drive
+
+Partition Layout:
+- GPT
+- EFI System Partition (ESP): 300 MB
+
+Keine interaktive Auswahl, keine manuelle Klickerei.
+
+---
+
+### Benutzerkonten (GANZ WICHTIG)
+
+Fuer eine saubere Autopilot-Experience MUSS gesetzt sein:
+Add a Microsoft (online) user account interactively during Windows Setup
+
+Lokale Offline-Konten duerfen nur temporaer existieren und nicht fuer den finalen Login genutzt werden.
+
+---
+
+### WLAN / Wi-Fi Setup
+
+Empfohlene Option:
+Configure Wi-Fi using an XML file
+
+Das WLAN-Profil kann von einem Referenzgeraet exportiert werden:
 netsh wlan export profile key=clear
-```
 
-Das erzeugt eine XML Datei pro Profil.
-
-Alternativ (wenn vorhanden): export-wlan-profile.ps1 aus deinem Repo verwenden.
-
-### 4.2 WLAN XML in Schneegans Tool hinterlegen
-Im Schneegans Tool bei WLAN / Wi-Fi:
-- Configure Wi-Fi using an XML file
-- Inhalt des exportierten WLANProfile XML einfuegen
+Der Inhalt der erzeugten XML-Datei kann direkt im Schneegans-Tool eingefuegt werden.
 
 Wichtig:
-- Kein echtes Passwort im Klartext "liegen lassen"
-- Wenn du nach Download der autounattend.xml das Passwort anpasst: <keyMaterial>...</keyMaterial>
+- Kein echtes WLAN-Passwort im Klartext im Tool belassen
+- <keyMaterial> nach Download der autounattend.xml anpassen
 
 ---
 
-## 5) WLAN Treiber (und weitere Treiber) ins Installationsmedium injizieren
+## WLAN-Treiber im Installationsmedium
 
-### 5.1 Warum?
-Autopilot benoetigt Internet in OOBE. Ohne passenden WLAN Treiber:
-- kein WLAN im OOBE
-- Setup bleibt haengen oder du musst mit USB-Ethernet "retten"
-- bei vielen Geraeten wird das unbrauchbar
+Um WLAN- (und weitere) Treiber zu integrieren, kann folgendes Script verwendet werden:
+Build-Windows11-WIM-NetFx3.ps1
 
-### 5.2 Treiberpaket (erforderliche Dateien)
-Der Treiberordner muss INF-basiert sein.
-
-Pflicht:
-- *.inf
-
-Typisch zusaetzlich (sollten im gleichen Ordnerbaum liegen):
-- *.sys
-- *.cat
-- ggf. *.dll, *.dat
-
-Beispiel:
-Drivers\WiFi\
-- Netwtw6e.inf
-- Netwtw14.inf
-- *.sys
-- *.cat
-
-### 5.3 Injection Script
-Nutze:
-- Build-Windows11-WIM-NetFx3.ps1
-
-Das Script:
-- fragt nach ISO
-- fragt nach Treiberordner (rekursiv)
-- injiziert Treiber in install.wim
-- optional zusaetzlich in boot.wim (Index 2)
-- integriert .NET Framework 3.5 (NetFx3) aus sources\sxs
+Funktion:
+- fragt nach einem Treiberordner (INF, SYS, CAT)
+- injiziert Treiber rekursiv in install.wim
+- optional auch in boot.wim (WinPE)
+- integriert zusaetzlich .NET Framework 3.5
 
 Empfehlung:
-- install.wim immer injizieren
-- boot.wim injizieren, wenn du WLAN bereits im Setup/WinPE brauchst (kein LAN vorhanden)
+Drivers\WiFi
+Drivers\LAN
+Drivers\Storage
 
 ---
 
-## 6) Autopilot Hardware-Hash Import (USB Workflow)
+# Windows Autopilot Hardware-Hash Import – HowTo
 
-Dieses Tool importiert die Hardware-ID eines Windows Geraets automatisch in Microsoft Intune Autopilot und wartet optional auf die Profilzuweisung.
+Dieses Tool importiert die Hardware-ID eines Windows-Geraets automatisch in Microsoft Intune Autopilot und wartet optional auf die Profilzuweisung.
 
-### 6.1 Voraussetzungen
-- Windows 10/11 (Zielgeraet)
-- PowerShell 5.1+
+## Voraussetzungen
+- Windows 10/11 PC
+- PowerShell 5.1 oder hoeher
 - Entra ID App Registration mit passenden Berechtigungen
-- USB Stick (empfohlen)
+- USB-Stick (empfohlen)
 
 ---
 
-## 7) Setup (einmalig): Entra ID App Registration erstellen
+## Setup (einmalig)
 
-### Schritt 1: createApp.ps1 ausfuehren
-1. PowerShell als Administrator oeffnen
-2. createApp.ps1 ausfuehren:
+### Entra ID App Registration erstellen
 
 ```powershell
 cd C:\Users\<USER>\Downloads\Autopilot
 .\createApp.ps1
 ```
 
-3. Im Browser anmelden (Global Admin Account)
-
-Das Script erstellt automatisch:
+Das Script erstellt:
 - Entra ID App Registration
 - Client Secret (2 Jahre)
 - API Permissions
-- JSON Config: IG-MgtTool-AutoApp_config.json
-
-Dateien in C:\Temp:
 - IG-MgtTool-AutoApp_config.json (wichtig)
-- IG-MgtTool-AutoApp_credentials.txt (Backup)
-- optional Zertifikate
 
-### Schritt 2: Admin Consent erteilen (falls noetig)
-URL aus dem Output oeffnen (als Global Admin):
+Admin Consent erteilen (falls noetig):
 https://login.microsoftonline.com/<TenantID>/adminconsent?client_id=<AppID>
 
 ---
 
-## 8) USB Stick vorbereiten
-
-Kopiere diese Dateien z. B. nach E:\Autopilot:
+## USB-Stick vorbereiten
 
 ```
 E:\Autopilot\
@@ -193,9 +189,7 @@ E:\Autopilot\
 
 ---
 
-## 9) wrapper-config.json konfigurieren
-
-Beispiel:
+## wrapper-config.json
 
 ```json
 {
@@ -208,80 +202,37 @@ Beispiel:
 }
 ```
 
-Parameter:
-- GroupTag: Ziel GroupTag fuer Autopilot
-- OutputFolder: "." speichert CSV/Logs auf USB
-- Assign: true wartet auf Profilzuweisung
-- Reboot: true rebootet nach Assignment (optional)
+---
+
+## Verwendung
+
+### Auf dem Zielgeraet
+- USB-Stick einstecken
+- Start-Autopilot.bat als Administrator ausfuehren
+
+### Im OOBE
+- Shift + F10
+- powershell.exe
+- cd E:\Autopilot
+- .\Start-Autopilot.bat
 
 ---
 
-## 10) Ausfuehrung
+## Ergebnis
 
-### 10.1 Auf installiertem Windows (oder wenn du schon Desktop hast)
-1. USB Stick einstecken
-2. Start-Autopilot.bat als Administrator ausfuehren
-
-Script macht:
-- HWID erfassen
-- Upload nach Autopilot
-- GroupTag setzen
-- optional warten auf Profilzuweisung (Assign=true)
-- CSV + Log auf USB speichern
-
-Output:
-- HWID-<SERIAL>-<DATE>.csv
-- autopilot-log.txt
-
-### 10.2 Waehrend OOBE / Setup (Shift+F10)
-1. Shift+F10
-2. PowerShell starten:
-```cmd
-powershell.exe
-```
-3. Zum USB wechseln:
-```powershell
-cd E:\Autopilot
-```
-4. Start:
-```powershell
-.\Start-Autopilot.bat
-```
+- HWID wird importiert
+- GroupTag gesetzt
+- optional Profilzuweisung abgewartet
+- CSV und Log auf USB gespeichert
 
 ---
 
-## 11) Troubleshooting (kurz)
+## Zusammenfassung
 
-### Script cannot be loaded - not digitally signed
-Workaround:
-```powershell
-Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
-.\Run-AutopilotWithExternalAppConfig.ps1
-```
+Mit diesem integrierten Ansatz lassen sich Windows-Geraete:
+- ohne manuelle WLAN-Konfiguration
+- ohne Benutzerlogin
+- ohne MFA
+- reproduzierbar und skalierbar
 
-### Geraet erscheint nicht in Autopilot
-- autopilot-log.txt pruefen
-- Permissions: DeviceManagementServiceConfig.ReadWrite.All
-- Admin Consent erteilt?
-- etwas warten (dynamische Gruppen)
-
-### Assign haengt
-- kein Autopilot Profil zugewiesen (GroupTag/Gruppe)
-- Intune Profilzuweisung pruefen
-
-### ClientSecret expired
-- neues Secret erstellen (createApp.ps1 erneut)
-
----
-
-## 12) Empfohlener Gesamt-Workflow
-
-1) Installationsmedium vorbereiten
-- WIM mit NetFx3 + WLAN Treiber erstellen (install.wim, optional boot.wim)
-- autounattend.xml mit WLAN Profil und Setup-Automation erstellen
-
-2) Staging pro Geraet
-- Windows installieren (autounattend reduziert Klicks, WLAN steht)
-- im OOBE/Setup via USB: HWID Import + GroupTag setzen
-- optional warten auf Assignment, optional reboot
-- anschliessend Autopilot OOBE / Enrollment durchlaufen lassen
+in Autopilot / Intune ueberfuehren.
