@@ -57,12 +57,15 @@ if (-not (Test-Path $CertPathRoot)) {
 Write-Host "==> Verbinde zu Microsoft Graph..." -ForegroundColor Cyan
 Write-Host "    Bitte melden Sie sich im Browser-Fenster an..." -ForegroundColor Yellow
 
+# Stelle sicher, dass keine alte Sitzung aktiv ist
+try { Disconnect-MgGraph -ErrorAction SilentlyContinue | Out-Null } catch {}
+
 $requiredScopes = @(
     "Application.ReadWrite.All",
     "Directory.AccessAsUser.All"
 )
 
-Connect-MgGraph -Scopes $requiredScopes -NoWelcome -ErrorAction Stop
+Connect-MgGraph -Scopes $requiredScopes -NoWelcome -UseDeviceCode:$false -ErrorAction Stop
 
 $ctx = Get-MgContext
 if (-not $ctx) {
